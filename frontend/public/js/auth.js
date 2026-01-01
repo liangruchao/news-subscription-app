@@ -105,7 +105,14 @@ async function handleLogout() {
 }
 
 // 检查是否登录（用于其他页面）
-function isLoggedIn() {
-    // 简单检查：可以通过 API 或 session
-    return true; // 临时返回 true，实际应该调用 API 检查
+// 这是一个异步函数，需要使用 await 调用
+async function isLoggedIn() {
+    try {
+        const result = await authAPI.getCurrentUser();
+        return result.success && result.data;
+    } catch (error) {
+        console.error('检查登录状态失败:', error);
+        return false;
+    }
 }
+
