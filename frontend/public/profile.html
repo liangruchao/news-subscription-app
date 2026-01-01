@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心 - 新闻订阅系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/profile.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header>
+            <h1 data-i18n="nav.home">新闻订阅系统</h1>
+            <nav class="nav-menu">
+                <a href="index.html" data-i18n="nav.home">首页</a>
+                <a href="profile.html" class="active" data-i18n="nav.profile">个人中心</a>
+                <a href="messages.html" data-i18n="nav.messages">消息<span id="messageBadge" class="badge"></span></a>
+                <a href="announcements.html" data-i18n="nav.announcements">公告</a>
+                <a href="preferences.html" data-i18n="nav.preferences">设置</a>
+                <a href="#" onclick="logout()" data-i18n="nav.logout">退出</a>
+            </nav>
+        </header>
+
+        <!-- 主要内容 -->
+        <main class="profile-main">
+            <!-- 左侧个人信息卡片 -->
+            <div class="profile-sidebar">
+                <div class="avatar-section">
+                    <div class="avatar-container">
+                        <img id="avatarImage" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23667eea'/%3E%3Ctext x='50' y='65' font-size='40' text-anchor='middle' fill='white'%3E%3F%3C/text%3E%3C/svg%3E" alt="用户头像">
+                        <label for="avatarUpload" class="avatar-upload-btn">
+                            <span data-i18n="profile.changeAvatar">更换头像</span>
+                        </label>
+                        <input type="file" id="avatarUpload" accept="image/*" style="display: none;" onchange="uploadAvatar(this.files[0])">
+                    </div>
+                    <h2 id="usernameDisplay">-</h2>
+                    <p id="emailDisplay">-</p>
+                </div>
+
+                <!-- 统计数据 -->
+                <div class="stats-section">
+                    <h3 data-i18n="stats.title">我的统计</h3>
+                    <div class="stat-item">
+                        <span class="stat-label" data-i18n="stats.subscriptionCount">订阅数量</span>
+                        <span class="stat-value" id="subscriptionCount">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label" data-i18n="stats.memberDays">注册天数</span>
+                        <span class="stat-value" id="daysSinceRegister">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧编辑区域 -->
+            <div class="profile-content">
+                <!-- 个人信息编辑 -->
+                <section class="edit-section">
+                    <h2 data-i18n="profile.basicInfo">个人信息</h2>
+                    <form id="profileForm" onsubmit="updateProfile(event)">
+                        <div class="form-group">
+                            <label for="username" data-i18n="profile.username">用户名</label>
+                            <input type="text" id="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email" data-i18n="profile.email">邮箱</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="bio" data-i18n="profile.bio">个人简介</label>
+                            <textarea id="bio" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary" data-i18n="profile.saveProfile">保存修改</button>
+                    </form>
+                    <div id="profileMessage" class="message"></div>
+                </section>
+
+                <!-- 修改密码 -->
+                <section class="edit-section">
+                    <h2 data-i18n="profile.changePassword">修改密码</h2>
+                    <form id="passwordForm" onsubmit="changePassword(event)">
+                        <div class="form-group">
+                            <label for="oldPassword" data-i18n="profile.oldPassword">当前密码</label>
+                            <input type="password" id="oldPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword" data-i18n="profile.newPassword">新密码</label>
+                            <input type="password" id="newPassword" required minlength="6">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword" data-i18n="profile.confirmPassword">确认新密码</label>
+                            <input type="password" id="confirmPassword" required minlength="6">
+                        </div>
+                        <button type="submit" class="btn btn-primary" data-i18n="profile.changePassword">修改密码</button>
+                    </form>
+                    <div id="passwordMessage" class="message"></div>
+                </section>
+
+                <!-- 登录历史 -->
+                <section class="edit-section">
+                    <h2 data-i18n="stats.loginHistory">最近登录</h2>
+                    <div id="loginHistoryList" class="login-history-list">
+                        <!-- 动态加载 -->
+                    </div>
+                </section>
+
+                <!-- 危险操作 -->
+                <section class="edit-section danger-section">
+                    <h2 data-i18n="profile.dangerZone">危险操作</h2>
+                    <p class="warning-text" data-i18n="profile.deleteAccountWarning">注销账户将永久删除您的所有数据，此操作不可恢复！</p>
+                    <button onclick="deleteAccount()" class="btn btn-danger" data-i18n="profile.deleteAccount">注销账户</button>
+                </section>
+            </div>
+        </main>
+
+        <!-- 页脚 -->
+        <footer>
+            <p>&copy; 2025 新闻订阅系统 | Powered by NewsAPI</p>
+        </footer>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script src="/js/profile.js"></script>
+    <script>
+        // 页面加载时初始化
+        window.onload = async function() {
+            if (!await isLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
+            }
+            await loadProfile();
+            loadStatistics();
+            loadLoginHistory();
+            updateMessageBadge();
+        };
+    </script>
+</body>
+</html>
