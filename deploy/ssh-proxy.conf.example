@@ -1,0 +1,38 @@
+# ============================================================
+# SSH 代理配置文件
+# 用途: 存储代理服务器连接信息
+# ============================================================
+
+# ============================================================
+# 请根据实际情况修改以下配置
+# ============================================================
+
+# SSH 代理服务器信息
+SSH_PROXY_HOST="your-proxy-server.com"     # 代理服务器地址
+SSH_PROXY_USER="proxy-user"                # 登录用户名
+SSH_PROXY_PORT="22"                        # SSH 端口
+
+# SOCKS 代理配置
+SOCKS_PORT="1080"                          # 本地 SOCKS 监听端口
+
+# 如果代理使用密钥认证（推荐）
+# 将私钥复制到 ~/.ssh/proxy_key
+# SSH_PROXY_KEY="~/.ssh/proxy_key"
+
+# ============================================================
+# 使用说明
+# ============================================================
+
+# 1. 将此文件复制到需要的位置:
+#    cp deploy/ssh-proxy.conf.example deploy/ssh-proxy.conf
+
+# 2. 修改上面的配置信息
+
+# 3. 启动隧道时加载配置:
+#    source deploy/ssh-proxy.conf
+#    ./scripts/setup-proxy.sh start
+
+# 或者直接设置环境变量:
+#    export SSH_PROXY_HOST=your-proxy.com
+#    export SSH_PROXY_USER=your-user
+#    ./scripts/setup-proxy.sh start
