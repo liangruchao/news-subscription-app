@@ -32,4 +32,9 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
      * 删除用户对特定类别的订阅
      */
     void deleteByUserIdAndCategory(Long userId, String category);
+
+    /**
+     * 统计用户的订阅数量
+     */
+    long countByUserId(Long userId);
 }
