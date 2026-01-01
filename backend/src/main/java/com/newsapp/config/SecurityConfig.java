@@ -13,29 +13,24 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
 /**
  * Spring Security 配置
- * 启用 CSRF 保护，使用 Cookie 存储 CSRF Token
+ * VPS 部署环境：禁用 CSRF 保护，简化 API 访问
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     /**
-     * 生产环境安全配置
+     * 默认安全配置（适用于 VPS 部署）
      */
     @Bean
-    @Profile("!test")
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // 放行所有请求（使用 Session 认证）
+            // 放行所有请求
             .authorizeHttpRequests(auth -> auth
                 .anyRequest().permitAll()
             )
-            // 启用 CSRF 保护
-            .csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                // 使用标准处理器，接受请求头中的 X-XSRF-TOKEN
-                .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-            )
+            // 禁用 CSRF 保护（VPS 部署环境）
+            .csrf(csrf -> csrf.disable())
             // 配置 Session 管理
             .sessionManagement(session -> session
                 .maximumSessions(1)
@@ -44,9 +39,6 @@ public class SecurityConfig {
             // 配置安全响应头
             .headers(headers -> headers
                 .frameOptions().sameOrigin()
-                .contentSecurityPolicy(csp -> csp
-                    .policyDirectives("default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'")
-                )
             );
 
         return http.build();
