@@ -6,6 +6,7 @@ import com.newsapp.dto.NewsDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -32,6 +33,18 @@ public class NewsService {
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
+    /**
+     * 构造函数 - 支持依赖注入
+     */
+    public NewsService(RestTemplate restTemplate, ObjectMapper objectMapper) {
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+    }
+
+    /**
+     * 默认构造函数 - 用于 Spring 容器创建
+     * 注意：此构造函数主要用于测试，生产环境推荐使用依赖注入
+     */
     public NewsService() {
         this.restTemplate = new RestTemplate();
         this.objectMapper = new ObjectMapper();
@@ -39,7 +52,9 @@ public class NewsService {
 
     /**
      * 获取指定类别的新闻
+     * 使用缓存，缓存 key 为 "news:{category}"
      */
+    @Cacheable(value = "news", key = "#category", unless = "#result == null || #result.isEmpty()")
     public List<NewsDto> getNewsByCategory(String category) {
         try {
             String url = baseUrl + "/top-headlines?category=" + category +
@@ -50,7 +65,9 @@ public class NewsService {
             logger.info("请求 NewsAPI: {}", url.replace(apiKey, "***"));
 
             String response = restTemplate.getForObject(url, String.class);
-            return parseNewsResponse(response);
+            List<NewsDto> result = parseNewsResponse(response);
+            logger.info("从 NewsAPI 获取到 {} 条 {} 类别的新闻", result.size(), category);
+            return result;
 
         } catch (Exception e) {
             logger.error("获取新闻失败: {}", e.getMessage());

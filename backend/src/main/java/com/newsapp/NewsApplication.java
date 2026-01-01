@@ -2,12 +2,14 @@ package com.newsapp;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 
 /**
  * News Subscription Application
  * 主应用程序入口
  */
 @SpringBootApplication
+@EnableCaching
 public class NewsApplication {
 
     public static void main(String[] args) {

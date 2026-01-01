@@ -1,0 +1,46 @@
+This is ApacheBench, Version 2.3 <$Revision: 1913912 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking localhost (be patient).....done
+
+
+Server Software:        
+Server Hostname:        localhost
+Server Port:            8081
+
+Document Path:          /api/auth/register
+Document Length:        128 bytes
+
+Concurrency Level:      10
+Time taken for tests:   0.144 seconds
+Complete requests:      100
+Failed requests:        0
+Non-2xx responses:      100
+Total transferred:      68100 bytes
+Total body sent:        24900
+HTML transferred:       12800 bytes
+Requests per second:    692.99 [#/sec] (mean)
+Time per request:       14.430 [ms] (mean)
+Time per request:       1.443 [ms] (mean, across all concurrent requests)
+Transfer rate:          460.87 [Kbytes/sec] received
+                        168.51 kb/s sent
+                        629.38 kb/s total
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    2   6.1      0      32
+Processing:     2   11  15.3      5      92
+Waiting:        1   11  14.9      5      92
+Total:          2   13  16.9      6      92
+
+Percentage of the requests served within a certain time (ms)
+  50%      6
+  66%      8
+  75%      9
+  80%     25
+  90%     36
+  95%     58
+  98%     67
+  99%     92
+ 100%     92 (longest request)
