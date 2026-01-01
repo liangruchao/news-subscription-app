@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: news-staging-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: Staging@RootPass2026
+      MYSQL_DATABASE: news_app_staging
+      MYSQL_USER: newsapp_staging
+      MYSQL_PASSWORD: Staging@DBPass2026
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_staging_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password
+    networks:
+      - news-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pStaging@RootPass2026"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: news-staging-redis
+    restart: unless-stopped
+    command: redis-server --requirepass Staging@RedisPass2026 --maxmemory 128mb --maxmemory-policy allkeys-lru --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_staging_data:/data
+    networks:
+      - news-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "Staging@RedisPass2026", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    image: news-app:staging-manual
+    container_name: news-staging-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: staging
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/news_app_staging?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: newsapp_staging
+      SPRING_DATASOURCE_PASSWORD: Staging@DBPass2026
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: Staging@RedisPass2026
+      NEWSAPI_API_KEY: 24815ed80d0e45068aa2de475b7e7532
+      JAVA_OPTS: -Xms512m -Xmx1024m
+    ports:
+      - "8081:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - news-network
+    volumes:
+      - ./logs/backend:/var/log/news-app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/api/auth/current"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: news-staging-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./frontend/public:/usr/share/nginx/html:ro
+      - ./logs/nginx:/var/log/nginx
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - backend
+    networks:
+      - news-network
+
+networks:
+  news-network:
+    driver: bridge
+    name: news-staging-network
+
+volumes:
+  mysql_staging_data:
+    driver: local
+    name: news-staging-mysql-data
+  redis_staging_data:
+    driver: local
+    name: news-staging-redis-data
