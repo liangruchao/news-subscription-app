@@ -15,6 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.io.IOException;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
