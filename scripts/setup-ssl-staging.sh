@@ -90,11 +90,15 @@ log_info "停止 Docker Nginx..."
 cd /var/www/news-app
 docker compose stop nginx 2>/dev/null || true
 
-# 确保端口 80 可用
-while sudo netstat -tlnp | grep :80 > /dev/null; do
-    log_warning "端口 80 仍被占用，等待..."
+# 停止系统 Nginx（如果有）
+sudo systemctl stop nginx 2>/dev/null || true
+
+# 确保端口 80 可用（精确匹配端口 80）
+if sudo netstat -tlnp 2>/dev/null | grep -E ':80\s' > /dev/null || sudo ss -tlnp 2>/dev/null | grep -E ':80\s' > /dev/null; then
+    log_warning "端口 80 被占用，尝试释放..."
+    sudo fuser -k 80/tcp 2>/dev/null || true
     sleep 2
-done
+fi
 
 log_success "端口 80 已释放"
 
