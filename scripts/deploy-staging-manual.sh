@@ -138,6 +138,14 @@ fi
 # ============================================================
 print_section "构建 Docker 镜像"
 
+# 设置环境变量
+export GIT_COMMIT=manual
+export ENVIRONMENT=staging
+
+log_info "设置环境变量:"
+echo "  GIT_COMMIT=$GIT_COMMIT"
+echo "  ENVIRONMENT=$ENVIRONMENT"
+
 log_info "构建后端镜像..."
 docker compose build backend
 
