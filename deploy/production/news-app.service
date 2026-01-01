@@ -1,0 +1,26 @@
+[Unit]
+Description=News Subscription Application
+After=network.target mysql.service redis-server.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/news-app/news-subscription-app/backend
+Environment="SPRING_PROFILES_ACTIVE=production"
+Environment="SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/news_app?useSSL=false&serverTimezone=UTC"
+Environment="SPRING_DATASOURCE_USERNAME=newsapp"
+Environment="SPRING_DATASOURCE_PASSWORD=NewsApp@2026DB"
+Environment="SPRING_DATA_REDIS_HOST=localhost"
+Environment="SPRING_DATA_REDIS_PORT=6379"
+Environment="SPRING_DATA_REDIS_PASSWORD=Redis@2026SecurePass"
+Environment="NEWSAPI_API_KEY=24815ed80d0e45068aa2de475b7e7532"
+Environment="JAVA_OPTS=-Xms512m -Xmx1024m"
+ExecStart=/usr/bin/java -jar $JAVA_OPTS /var/www/news-app/news-subscription-app/backend/target/*.jar
+ExecStop=/bin/kill -15 $MAINPID
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:/var/log/news-app.log
+StandardError=append:/var/log/news-app-error.log
+
+[Install]
+WantedBy=multi-user.target
