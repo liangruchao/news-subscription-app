@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新闻订阅系统</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header>
+            <h1>📰 新闻订阅系统</h1>
+            <div id="userInfo">
+                <a href="login.html" class="btn">登录</a>
+                <a href="register.html" class="btn btn-secondary">注册</a>
+            </div>
+        </header>
+
+        <!-- 主要内容 -->
+        <main>
+            <!-- 欢迎/登录提示 -->
+            <div id="welcomeSection" class="welcome-section">
+                <h2>欢迎来到新闻订阅系统</h2>
+                <p>请<a href="login.html">登录</a>或<a href="register.html">注册</a>以开始使用</p>
+            </div>
+
+            <!-- 已登录内容 -->
+            <div id="loggedInSection" class="logged-in-section" style="display: none;">
+                <!-- 订阅管理 -->
+                <section class="subscription-section">
+                    <h2>我的订阅</h2>
+                    <div id="subscriptionList" class="subscription-list">
+                        <!-- 动态加载订阅列表 -->
+                    </div>
+                    <div class="add-subscription">
+                        <select id="categorySelect">
+                            <option value="">选择新闻类别</option>
+                            <option value="business">商业</option>
+                            <option value="entertainment">娱乐</option>
+                            <option value="general">综合</option>
+                            <option value="health">健康</option>
+                            <option value="science">科学</option>
+                            <option value="sports">体育</option>
+                            <option value="technology">科技</option>
+                        </select>
+                        <button onclick="addSubscription()" class="btn">订阅</button>
+                    </div>
+                </section>
+
+                <!-- 新闻列表 -->
+                <section class="news-section">
+                    <h2>我的新闻</h2>
+                    <button onclick="loadNews()" class="btn btn-primary">刷新新闻</button>
+                    <div id="newsList" class="news-list">
+                        <!-- 动态加载新闻 -->
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- 页脚 -->
+        <footer>
+            <p>&copy; 2025 新闻订阅系统 | Powered by NewsAPI</p>
+        </footer>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/news.js"></script>
+    <script>
+        // 页面加载时检查登录状态
+        window.onload = function() {
+            checkLoginStatus();
+            if (isLoggedIn()) {
+                loadSubscriptions();
+                loadNews();
+            }
+        };
+    </script>
+</body>
+</html>
