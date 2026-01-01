@@ -1,0 +1,394 @@
+# ============================================================
+# GitHub Actions - 部署到 Production 环境
+# 触发条件: 推送到 main 分支（需要手动确认）
+# ============================================================
+
+name: 部署到 Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: '确认部署到生产环境? (输入 yes 继续)'
+        required: true
+        default: 'no'
+
+jobs:
+  # ============================================================
+  # 构建和测试
+  # ============================================================
+  build-and-test:
+    name: 构建和测试
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: 后端单元测试
+        run: |
+          cd backend
+          mvn test -DskipITs=true
+
+      - name: 后端集成测试
+        run: |
+          cd backend
+          mvn verify -DskipUnitTests=true
+        env:
+          SPRING_PROFILES_ACTIVE: test
+
+      - name: 前端测试
+        run: |
+          cd frontend
+          npm ci
+          npm run test
+
+  # ============================================================
+  # 构建 Docker 镜像
+  # ============================================================
+  build-image:
+    name: 构建 Docker 镜像
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 构建 Docker 镜像
+        run: |
+          GIT_COMMIT=${{ github.sha }}
+          docker build -t news-app:production-${GIT_COMMIT} \
+            --build-arg GIT_COMMIT=${GIT_COMMIT} \
+            --build-arg ENVIRONMENT=production \
+            -f Dockerfile .
+
+      - name: 保存镜像
+        run: |
+          docker save news-app:production-${{ github.sha }} | gzip > /tmp/news-app-production.tar.gz
+
+      - name: 上传镜像制品
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image-production
+          path: /tmp/news-app-production.tar.gz
+          retention-days: 30
+
+  # ============================================================
+  # 手动确认部署
+  # ============================================================
+  manual-approval:
+    name: 手动确认部署
+    runs-on: ubuntu-latest
+    needs: [build-and-test, build-image]
+    if: github.event_name == 'push'
+    environment:
+      name: production
+      url: http://${{ secrets.PRODUCTION_VPS_HOST }}
+
+    steps:
+      - name: 等待批准
+        run: |
+          echo "请在 GitHub Actions 界面确认部署到生产环境"
+
+  # ============================================================
+  # 部署到 Production（蓝绿部署）
+  # ============================================================
+  deploy:
+    name: 蓝绿部署到 Production
+    runs-on: ubuntu-latest
+    needs: [build-and-test, build-image]
+    if: github.event_name == 'workflow_dispatch'
+    environment:
+      name: production
+      url: http://${{ secrets.PRODUCTION_VPS_HOST }}
+
+    steps:
+      - name: 检查确认
+        run: |
+          CONFIRM="${{ github.event.inputs.confirm }}"
+          if [ "$CONFIRM" != "yes" ]; then
+            echo "未确认部署，取消流程"
+            exit 1
+          fi
+          echo "已确认部署到生产环境"
+
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 下载镜像制品
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image-production
+          path: /tmp
+
+      - name: 上传到 Production VPS
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.PRODUCTION_VPS_HOST }}
+          username: ${{ secrets.PRODUCTION_VPS_USER }}
+          key: ${{ secrets.PRODUCTION_VPS_SSH_KEY }}
+          source: "/tmp/news-app-production.tar.gz,deploy/production/docker-compose.yml,deploy/production/.env"
+          target: "/var/www/news-app"
+          strip_components: 0
+
+      - name: 在 VPS 上执行蓝绿部署
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PRODUCTION_VPS_HOST }}
+          username: ${{ secrets.PRODUCTION_VPS_USER }}
+          key: ${{ secrets.PRODUCTION_VPS_SSH_KEY }}
+          script: |
+            set -e
+
+            PROJECT_DIR="/var/www/news-app"
+            cd ${PROJECT_DIR}
+
+            # ============================================================
+            # 确定当前环境和目标环境
+            # ============================================================
+            if docker ps | grep -q "news-production-backend-blue"; then
+                CURRENT_COLOR="blue"
+                NEW_COLOR="green"
+                NEW_PORT=8082
+            elif docker ps | grep -q "news-production-backend-green"; then
+                CURRENT_COLOR="green"
+                NEW_COLOR="blue"
+                NEW_PORT=8081
+            else
+                CURRENT_COLOR="none"
+                NEW_COLOR="blue"
+                NEW_PORT=8081
+            fi
+
+            echo "当前环境: $CURRENT_COLOR"
+            echo "新环境: $NEW_COLOR (端口 $NEW_PORT)"
+
+            # ============================================================
+            # 加载新镜像
+            # ============================================================
+            docker load < /tmp/news-app-production.tar.gz
+
+            # 更新 .env 中的 GIT_COMMIT
+            sed -i "s/GIT_COMMIT=.*/GIT_COMMIT=${{ github.sha }}/" .env
+
+            # ============================================================
+            # 启动新环境
+            # ============================================================
+            export BACKEND_PORT=$NEW_PORT
+            export COMPOSE_PROJECT_NAME=news-production-${NEW_COLOR}
+
+            docker-compose --env-file .env up -d
+
+            # ============================================================
+            # 等待健康检查
+            # ============================================================
+            echo "等待新环境启动..."
+            for i in {1..60}; do
+                if curl -f http://localhost:${NEW_PORT}/api/auth/current; then
+                    echo "✓ 新环境健康检查通过! ($i 秒)"
+                    break
+                fi
+                if [ $i -eq 60 ]; then
+                    echo "✗ 新环境启动超时"
+                    docker-compose --env-file .env down
+                    exit 1
+                fi
+                echo -n "."
+                sleep 2
+            done
+
+            # ============================================================
+            # 切换 Nginx
+            # ============================================================
+            echo ""
+            echo "切换 Nginx 到新环境..."
+
+            cat > /etc/nginx/conf.d/news-app.conf << 'NGINX_EOF'
+            server {
+                listen 80;
+                server_name _;
+
+                location / {
+                    root /usr/share/nginx/html;
+                    index index.html;
+                    try_files $uri $uri/ /index.html;
+                }
+
+                location /api/ {
+                    proxy_pass http://backend-NEW_PLACEHOLDER:NEW_PORT_PLACEHOLDER;
+                    proxy_set_header Host $host;
+                    proxy_set_header X-Real-IP $remote_addr;
+                    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+                    proxy_connect_timeout 60s;
+                    proxy_send_timeout 60s;
+                    proxy_read_timeout 60s;
+                }
+
+                location /health {
+                    access_log off;
+                    return 200 "healthy\n";
+                    add_header Content-Type text/plain;
+                }
+            }
+            NGINX_EOF
+
+            sed -i "s/backend-NEW_PLACEHOLDER/backend-${NEW_COLOR}/" /etc/nginx/conf.d/news-app.conf
+            sed -i "s/NEW_PORT_PLACEHOLDER/${NEW_PORT}/" /etc/nginx/conf.d/news-app.conf
+
+            nginx -t
+            nginx -s reload
+
+            # ============================================================
+            # 等待并验证
+            # ============================================================
+            echo ""
+            echo "等待 10 秒确认..."
+            sleep 10
+
+            if ! curl -f http://localhost/health; then
+                echo "✗ 公网访问失败，回滚!"
+                # 回滚 Nginx
+                if [ "$CURRENT_COLOR" != "none" ]; then
+                    sed -i "s/backend-${NEW_COLOR}/backend-${CURRENT_COLOR}/" /etc/nginx/conf.d/news-app.conf
+                    CURRENT_PORT=$(echo "8081 8082" | sed "s/${NEW_PORT}//" | tr -d ' ')
+                    sed -i "s/${NEW_PORT}/${CURRENT_PORT}/" /etc/nginx/conf.d/news-app.conf
+                    nginx -s reload
+                fi
+                docker-compose --env-file .env down
+                exit 1
+            fi
+
+            # ============================================================
+            # 停止旧环境
+            # ============================================================
+            if [ "$CURRENT_COLOR" != "none" ]; then
+                echo ""
+                echo "停止旧环境 ($CURRENT_COLOR)..."
+                export COMPOSE_PROJECT_NAME=news-production-${CURRENT_COLOR}
+                docker-compose --env-file ../.env down
+            fi
+
+            # ============================================================
+            # 清理
+            # ============================================================
+            echo ""
+            echo "清理旧镜像..."
+            docker image prune -f
+
+            # 删除上传的归档文件
+            rm -f /tmp/news-app-production.tar.gz
+
+            # ============================================================
+            # 记录部署
+            # ============================================================
+            echo ""
+            echo "记录部署信息..."
+            cat >> ${PROJECT_DIR}/deployments.log << EOF
+            $(date '+%Y-%m-%d %H:%M:%S') - Deployed ${{ github.sha }} to ${NEW_COLOR} (from ${CURRENT_COLOR})
+            EOF
+
+            echo ""
+            echo "✓ 蓝绿部署完成!"
+
+  # ============================================================
+  # 健康检查
+  # ============================================================
+  health-check:
+    name: 健康检查
+    runs-on: ubuntu-latest
+    needs: deploy
+
+    steps:
+      - name: 检查 HTTP 端点
+        run: |
+          for i in {1..30}; do
+            if curl -f http://${{ secrets.PRODUCTION_VPS_HOST }}/health; then
+              echo "✓ 健康检查通过"
+              break
+            fi
+            echo "等待中... ($i/30)"
+            sleep 2
+          done
+
+      - name: 检查 API 端点
+        run: |
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://${{ secrets.PRODUCTION_VPS_HOST }}/api/auth/current)
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "401" ]; then
+            echo "✓ API 端点正常 (HTTP $HTTP_CODE)"
+          else
+            echo "✗ API 端点异常 (HTTP $HTTP_CODE)"
+            exit 1
+          fi
+
+      - name: 冒烟测试
+        run: |
+          # 测试主要 API 端点
+          curl -f http://${{ secrets.PRODUCTION_VPS_HOST }}/health || exit 1
+          echo "✓ 冒烟测试通过"
+
+  # ============================================================
+  # 通知
+  # ============================================================
+  notify:
+    name: 发送通知
+    runs-on: ubuntu-latest
+    needs: [build-and-test, build-image, deploy, health-check]
+    if: always()
+
+    steps:
+      - name: 发送 Slack 通知
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" = "success" ]; then
+            EMOJI="✅"
+            COLOR="good"
+          else
+            EMOJI="❌"
+            COLOR="danger"
+          fi
+
+          curl -X POST $SLACK_WEBHOOK_URL \
+            -H 'Content-Type: application/json' \
+            -d "{
+              \"attachments\": [{
+                \"color\": \"${COLOR}\",
+                \"title\": \"${EMOJI} Production 环境部署${STATUS}\",
+                \"fields\": [
+                  {\"title\": \"分支\", \"value\": \"${{ github.ref }}\", \"short\": true},
+                  {\"title\": \"提交\", \"value\": \"${{ github.sha }}\", \"short\": true},
+                  {\"title\": \"作者\", \"value\": \"${{ github.actor }}\", \"short\": true},
+                  {\"title\": \"环境\", \"value\": \"Production\", \"short\": true}
+                ],
+                \"footer\": \"GitHub Actions - 蓝绿部署\",
+                \"ts\": ${{ github.event.head_commit.timestamp }}
+              }]
+            }"
+
+      - name: 部署总结
+        run: |
+          echo ""
+          echo "=================================================================="
+          echo "  Production 环境部署完成"
+          echo "=================================================================="
+          echo "  状态:     ${{ job.status }}"
+          echo "  分支:     ${{ github.ref_name }}"
+          echo "  提交:     ${{ github.sha }}"
+          echo "  访问地址: http://${{ secrets.PRODUCTION_VPS_HOST }}/"
+          echo "=================================================================="
