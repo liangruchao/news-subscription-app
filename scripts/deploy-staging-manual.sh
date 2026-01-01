@@ -88,13 +88,28 @@ fi
 print_section "准备代码"
 
 if [ "$GITHUB_ACCESSIBLE" = true ]; then
-    if [ -d ".git" ]; then
+    # 检查当前目录是否是 git 仓库
+    if [ -d ".git" ] && git rev-parse --git-dir > /dev/null 2>&1; then
+        # 检查当前分支
+        CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+        log_info "当前分支: $CURRENT_BRANCH"
+
         log_info "更新现有代码..."
         git fetch --all
         git reset --hard origin/develop
+        git checkout develop
     else
         log_info "克隆代码仓库..."
-        git clone -b develop git@github.com:liangruchao/news-subscription-app.git .
+        # 如果目录不为空，先清理
+        if [ "$(ls -A .)" ]; then
+            log_warning "目录不为空，先备份现有文件..."
+            mkdir -p ../backup-$(date +%Y%m%d%H%M%S)
+            mv * ../backup-$(date +%Y%m%d%H%M%S)/ 2>/dev/null || true
+            mv .* ../backup-$(date +%Y%m%d%H%M%S)/ 2>/dev/null || true
+        fi
+        git clone -b develop git@github.com:liangruchao/news-subscription-app.git tmp-repo
+        mv tmp-repo/* tmp-repo/.[!.]* . 2>/dev/null || true
+        rm -rf tmp-repo
     fi
     log_success "代码已更新"
 else
