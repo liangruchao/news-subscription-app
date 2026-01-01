@@ -3,6 +3,7 @@ package com.newsapp.service;
 import com.newsapp.dto.LoginRequest;
 import com.newsapp.dto.RegisterRequest;
 import com.newsapp.entity.User;
+import com.newsapp.exception.BusinessException;
 import com.newsapp.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,13 +37,13 @@ public class UserService {
         // 检查用户名是否已存在
         if (userRepository.existsByUsername(request.getUsername())) {
             log.warn("注册失败: 用户名已存在 - {}", request.getUsername());
-            throw new RuntimeException("用户名已存在");
+            throw new BusinessException("用户名已存在");
         }
 
         // 检查邮箱是否已存在
         if (userRepository.existsByEmail(request.getEmail())) {
             log.warn("注册失败: 邮箱已被注册 - {}", request.getEmail());
-            throw new RuntimeException("邮箱已被注册");
+            throw new BusinessException("邮箱已被注册");
         }
 
         // 创建新用户
@@ -67,13 +68,13 @@ public class UserService {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> {
                     log.warn("登录失败: 用户不存在 - {}", request.getUsername());
-                    return new RuntimeException("用户名或密码错误");
+                    return new BusinessException("用户名或密码错误");
                 });
 
         // 使用 BCrypt 验证密码
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             log.warn("登录失败: 密码错误 - {}", request.getUsername());
-            throw new RuntimeException("用户名或密码错误");
+            throw new BusinessException("用户名或密码错误");
         }
 
         log.info("用户登录成功: id={}, username={}", user.getId(), user.getUsername());
@@ -85,7 +86,7 @@ public class UserService {
      */
     public User getUserById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("用户不存在"));
+                .orElseThrow(() -> new BusinessException("用户不存在"));
     }
 
     /**
@@ -93,6 +94,6 @@ public class UserService {
      */
     public User getUserByUsername(String username) {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("用户不存在"));
+                .orElseThrow(() -> new BusinessException("用户不存在"));
     }
 }
