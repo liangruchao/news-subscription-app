@@ -6,6 +6,7 @@ import com.newsapp.dto.NewsDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -117,5 +118,39 @@ public class NewsService {
         }
 
         return newsList;
+    }
+
+    /**
+     * 预加载所有分类的新闻
+     */
+    @CacheEvict(value = "news", allEntries = true)
+    public void preloadAllCategories() {
+        logger.info("开始预加载所有分类的新闻...");
+
+        String[] categories = {"business", "entertainment", "general",
+                              "health", "science", "sports", "technology"};
+
+        int successCount = 0;
+        for (String category : categories) {
+            try {
+                getNewsByCategory(category);
+                successCount++;
+                logger.info("分类 {} 预加载成功", category);
+            } catch (Exception e) {
+                logger.error("分类 {} 预加载失败: {}", category, e.getMessage());
+            }
+        }
+
+        logger.info("预加载完成: 成功 {}/{}", successCount, categories.length);
+    }
+
+    /**
+     * 自动刷新所有新闻缓存
+     */
+    @CacheEvict(value = "news", allEntries = true)
+    public void autoRefreshAllCache() {
+        logger.info("开始自动刷新新闻缓存...");
+        preloadAllCategories();
+        logger.info("自动刷新完成");
     }
 }

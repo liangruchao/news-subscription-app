@@ -62,3 +62,10 @@ frontend/.env.local
 
 # Database
 *.sql.backup
+
+# Environment files (security - contains sensitive data)
+.env
+*.env
+.env.local
+deploy/**/.env
+deploy/**/*.env
