@@ -13,11 +13,11 @@
 
 添加以下记录：
 
-| 类型 | 名称 | 内容 | 代理状态 |
-|------|------|------|----------|
-| A | @ | 139.224.189.183 | 仅 DNS (灰色云) |
-| A | www | 139.224.189.183 | 仅 DNS (灰色云) |
-| A | staging | 47.103.204.114 | 仅 DNS (灰色云) |
+| 类型 | 名称    | 内容            | 代理状态        |
+| ---- | ------- | --------------- | --------------- |
+| A    | @       | 139.224.189.183 | 仅 DNS (灰色云) |
+| A    | www     | 139.224.189.183 | 仅 DNS (灰色云) |
+| A    | staging | 47.103.204.114  | 仅 DNS (灰色云) |
 
 **注意**: 先设置为"仅 DNS"（灰色云），SSL 证书配置好后再改为"代理"（橙色云）
 
@@ -233,6 +233,7 @@ bash /var/www/news-app/news-subscription-app/scripts/setup-ssl-production.sh
 ### 第四步：更新 Cloudflare SSL 模式
 
 DNS 验证通过后：
+
 1. 在 Cloudflare 中将记录改为"代理"（橙色云）
 2. SSL/TLS 设置 → Full 模式
 
@@ -298,8 +299,8 @@ sudo nginx -t
 
 配置完成后：
 
-| 环境 | URL |
-|------|-----|
-| Production | https://lrc002.click |
-| Production | https://www.lrc002.click |
-| Staging | https://staging.lrc002.click |
+| 环境       | URL                          |
+| ---------- | ---------------------------- |
+| Production | https://lrc002.click         |
+| Production | https://www.lrc002.click     |
+| Staging    | https://staging.lrc002.click |

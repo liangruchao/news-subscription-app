@@ -1,7 +1,10 @@
 package com.newsapp.service;
 
+import com.newsapp.dto.ChangePasswordRequest;
 import com.newsapp.dto.LoginRequest;
 import com.newsapp.dto.RegisterRequest;
+import com.newsapp.dto.UpdateProfileRequest;
+import com.newsapp.dto.UserProfileResponse;
 import com.newsapp.entity.User;
 import com.newsapp.exception.BusinessException;
 import com.newsapp.repository.UserRepository;
@@ -95,5 +98,100 @@ public class UserService {
     public User getUserByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new BusinessException("用户不存在"));
+    }
+
+    /**
+     * 获取用户资料
+     */
+    public UserProfileResponse getUserProfile(Long userId) {
+        User user = getUserById(userId);
+        UserProfileResponse response = new UserProfileResponse();
+        response.setId(user.getId());
+        response.setUsername(user.getUsername());
+        response.setEmail(user.getEmail());
+        response.setAvatar(user.getAvatarUrl());
+        response.setBio(user.getBio());
+        response.setCreatedAt(user.getCreatedAt());
+        return response;
+    }
+
+    /**
+     * 更新用户资料
+     */
+    @Transactional
+    public User updateProfile(Long userId, UpdateProfileRequest request) {
+        log.info("更新用户资料: userId={}", userId);
+
+        User user = getUserById(userId);
+
+        // 检查用户名是否被占用
+        if (request.getUsername() != null && !request.getUsername().equals(user.getUsername())) {
+            if (userRepository.existsByUsername(request.getUsername())) {
+                throw new BusinessException("用户名已被占用");
+            }
+            user.setUsername(request.getUsername());
+        }
+
+        // 检查邮箱是否被占用
+        if (request.getEmail() != null && !request.getEmail().equals(user.getEmail())) {
+            if (userRepository.existsByEmail(request.getEmail())) {
+                throw new BusinessException("邮箱已被占用");
+            }
+            user.setEmail(request.getEmail());
+        }
+
+        // 更新简介
+        if (request.getBio() != null) {
+            user.setBio(request.getBio());
+        }
+
+        User savedUser = userRepository.save(user);
+        log.info("用户资料更新成功: userId={}", userId);
+        return savedUser;
+    }
+
+    /**
+     * 修改密码
+     */
+    @Transactional
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        log.info("修改密码: userId={}", userId);
+
+        User user = getUserById(userId);
+
+        // 验证旧密码
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new BusinessException("旧密码错误");
+        }
+
+        // 设置新密码
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        log.info("密码修改成功: userId={}", userId);
+    }
+
+    /**
+     * 更新头像URL
+     */
+    @Transactional
+    public void updateAvatarUrl(Long userId, String avatarUrl) {
+        log.info("更新头像: userId={}, avatarUrl={}", userId, avatarUrl);
+        User user = getUserById(userId);
+        user.setAvatarUrl(avatarUrl);
+        userRepository.save(user);
+    }
+
+    /**
+     * 删除用户（账户注销）
+     */
+    @Transactional
+    public void deleteUser(Long userId) {
+        log.info("删除用户: userId={}", userId);
+        if (!userRepository.existsById(userId)) {
+            throw new BusinessException("用户不存在");
+        }
+        userRepository.deleteById(userId);
+        log.info("用户删除成功: userId={}", userId);
     }
 }

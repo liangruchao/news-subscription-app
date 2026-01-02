@@ -188,3 +188,167 @@ const newsAPI = {
     },
 };
 
+// 个人资料 API
+const profileAPI = {
+    // 获取用户资料
+    getProfile: () => {
+        return apiRequest('/profile');
+    },
+
+    // 更新用户资料
+    updateProfile: (data) => {
+        return apiRequest('/profile', {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        });
+    },
+
+    // 修改密码
+    changePassword: (oldPassword, newPassword) => {
+        return apiRequest('/profile/password', {
+            method: 'PUT',
+            body: JSON.stringify({ oldPassword, newPassword }),
+        });
+    },
+
+    // 注销账户
+    deleteAccount: () => {
+        return apiRequest('/profile', {
+            method: 'DELETE',
+        });
+    },
+
+    // 上传头像
+    uploadAvatar: (file) => {
+        return apiRequest('/avatar', {
+            method: 'POST',
+            headers: {
+                // 不设置 Content-Type，让浏览器自动设置 multipart/form-data
+            },
+            body: JSON.stringify({
+                fileName: file.name,
+                fileType: file.type,
+            }),
+        });
+    },
+};
+
+// 消息通知 API
+const messageAPI = {
+    // 获取所有消息
+    getAllMessages: () => {
+        return apiRequest('/messages');
+    },
+
+    // 获取未读消息
+    getUnreadMessages: () => {
+        return apiRequest('/messages/unread');
+    },
+
+    // 获取未读消息数量
+    getUnreadCount: () => {
+        return apiRequest('/messages/unread/count');
+    },
+
+    // 标记消息为已读
+    markAsRead: (id) => {
+        return apiRequest(`/messages/${id}/read`, {
+            method: 'PUT',
+        });
+    },
+
+    // 标记所有消息为已读
+    markAllAsRead: () => {
+        return apiRequest('/messages/read-all', {
+            method: 'PUT',
+        });
+    },
+
+    // 删除消息
+    deleteMessage: (id) => {
+        return apiRequest(`/messages/${id}`, {
+            method: 'DELETE',
+        });
+    },
+};
+
+// 系统公告 API
+const announcementAPI = {
+    // 获取已发布的公告
+    getPublishedAnnouncements: () => {
+        return apiRequest('/announcements/published');
+    },
+
+    // 获取所有公告（管理员）
+    getAllAnnouncements: () => {
+        return apiRequest('/announcements');
+    },
+
+    // 根据 ID 获取公告
+    getAnnouncementById: (id) => {
+        return apiRequest(`/announcements/${id}`);
+    },
+
+    // 创建公告（管理员）
+    createAnnouncement: (data) => {
+        return apiRequest('/announcements', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+    },
+
+    // 发布公告（管理员）
+    publishAnnouncement: (id) => {
+        return apiRequest(`/announcements/${id}/publish`, {
+            method: 'PUT',
+        });
+    },
+
+    // 更新公告（管理员）
+    updateAnnouncement: (id, data) => {
+        return apiRequest(`/announcements/${id}`, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        });
+    },
+
+    // 删除公告（管理员）
+    deleteAnnouncement: (id) => {
+        return apiRequest(`/announcements/${id}`, {
+            method: 'DELETE',
+        });
+    },
+};
+
+// 用户偏好设置 API
+const preferencesAPI = {
+    // 获取用户偏好设置
+    getPreferences: () => {
+        return apiRequest('/preferences');
+    },
+
+    // 更新用户偏好设置
+    updatePreferences: (data) => {
+        return apiRequest('/preferences', {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        });
+    },
+};
+
+// 登录历史 API
+const loginHistoryAPI = {
+    // 获取登录历史
+    getLoginHistory: () => {
+        return apiRequest('/login-history');
+    },
+};
+
+// 统计数据 API
+const statisticsAPI = {
+    // 获取用户统计数据
+    getStatistics: () => {
+        return apiRequest('/statistics');
+    },
+};
+

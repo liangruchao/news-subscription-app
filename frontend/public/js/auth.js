@@ -70,34 +70,53 @@ async function checkLoginStatus() {
     const welcomeSection = document.getElementById('welcomeSection');
     const loggedInSection = document.getElementById('loggedInSection');
     const userInfo = document.getElementById('userInfo');
+    const mainNav = document.getElementById('mainNav');
 
     if (result.success && result.data) {
         // 已登录
         if (welcomeSection) welcomeSection.style.display = 'none';
         if (loggedInSection) loggedInSection.style.display = 'block';
-        if (userInfo) {
-            userInfo.innerHTML = `
-                <span>欢迎，${result.data.username}</span>
-                <a href="#" onclick="handleLogout()" class="btn">登出</a>
-            `;
-        }
+        if (userInfo) userInfo.style.display = 'none';
+        if (mainNav) mainNav.style.display = 'block';
+
+        // 更新导航栏用户信息
+        updateNavUserInfo(result.data);
+
+        // 更新消息徽章
+        updateMessageBadge();
+
         return true;
     } else {
         // 未登录
         if (welcomeSection) welcomeSection.style.display = 'block';
         if (loggedInSection) loggedInSection.style.display = 'none';
-        if (userInfo) {
-            userInfo.innerHTML = `
-                <a href="login.html" class="btn">登录</a>
-                <a href="register.html" class="btn btn-secondary">注册</a>
-            `;
-        }
+        if (userInfo) userInfo.style.display = 'block';
+        if (mainNav) mainNav.style.display = 'none';
         return false;
+    }
+}
+
+// 更新导航栏用户信息
+function updateNavUserInfo(user) {
+    const navUsername = document.getElementById('navUsername');
+    const navAvatar = document.getElementById('navAvatar');
+
+    if (navUsername) navUsername.textContent = user.username;
+    if (navAvatar && user.avatarUrl) {
+        navAvatar.src = user.avatarUrl;
     }
 }
 
 // 处理登出
 async function handleLogout() {
+    const result = await authAPI.logout();
+    if (result.success) {
+        window.location.href = 'login.html';
+    }
+}
+
+// 退出登录（统一函数）
+async function logout() {
     const result = await authAPI.logout();
     if (result.success) {
         window.location.href = 'login.html';
@@ -113,6 +132,23 @@ async function isLoggedIn() {
     } catch (error) {
         console.error('检查登录状态失败:', error);
         return false;
+    }
+}
+
+// 更新消息徽章
+async function updateMessageBadge() {
+    try {
+        const result = await messageAPI.getUnreadCount();
+        const badge = document.getElementById('messageBadge');
+        if (badge) {
+            if (result.success && result.data > 0) {
+                badge.textContent = result.data > 99 ? '99+' : result.data;
+            } else {
+                badge.textContent = '';
+            }
+        }
+    } catch (error) {
+        console.error('更新消息徽章失败:', error);
     }
 }
 

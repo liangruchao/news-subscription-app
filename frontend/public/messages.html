@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消息中心 - 新闻订阅系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/messages.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header>
+            <h1>新闻订阅系统</h1>
+            <nav class="nav-menu">
+                <a href="index.html">首页</a>
+                <a href="profile.html">个人中心</a>
+                <a href="messages.html" class="active">消息<span id="messageBadge" class="badge"></span></a>
+                <a href="announcements.html">公告</a>
+                <a href="preferences.html">设置</a>
+                <a href="#" onclick="logout()">退出</a>
+            </nav>
+        </header>
+
+        <!-- 主要内容 -->
+        <main class="messages-main">
+            <!-- 消息过滤器 -->
+            <div class="messages-filter">
+                <button class="filter-btn active" onclick="filterMessages('all')">全部消息</button>
+                <button class="filter-btn" onclick="filterMessages('unread')">未读消息</button>
+                <button class="filter-btn" onclick="filterMessages('read')">已读消息</button>
+                <div class="filter-actions">
+                    <button class="btn btn-primary" onclick="markAllAsRead()">全部已读</button>
+                </div>
+            </div>
+
+            <!-- 消息列表 -->
+            <div id="messagesList" class="messages-list">
+                <!-- 动态加载消息 -->
+            </div>
+
+            <!-- 空状态 -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">📬</div>
+                <p>暂无消息</p>
+            </div>
+        </main>
+
+        <!-- 消息详情模态框 -->
+        <div id="messageModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 id="modalTitle">消息详情</h2>
+                    <button class="modal-close" onclick="closeMessageModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="message-meta">
+                        <span id="modalType" class="message-type"></span>
+                        <span id="modalTime" class="message-time"></span>
+                    </div>
+                    <div id="modalContent" class="message-content"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeMessageModal()">关闭</button>
+                    <button id="modalDeleteBtn" class="btn btn-danger" onclick="deleteCurrentMessage()">删除</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <footer>
+            <p>&copy; 2025 新闻订阅系统 | Powered by NewsAPI</p>
+        </footer>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/messages.js"></script>
+    <script>
+        // 页面加载时初始化
+        window.onload = function() {
+            if (!isLoggedIn()) {
+                window.location.href = 'login.html';
+                return;
+            }
+            loadMessages();
+            updateMessageBadge();
+        };
+    </script>
+</body>
+</html>
