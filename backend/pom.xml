@@ -67,6 +67,27 @@
             <artifactId>commons-pool2</artifactId>
         </dependency>
 
+        <!-- Apache Commons Lang3 -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+
+        <!-- Jackson JavaTimeModule for LocalDateTime serialization -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
+
+        <!-- Rome RSS/Atom Parser -->
+        <dependency>
+            <groupId>com.rometools</groupId>
+            <artifactId>rome</artifactId>
+            <version>1.19.0</version>
+        </dependency>
+
+        <!-- OPML Parser (在阶段五添加，暂不需要) -->
+
         <!-- MySQL Connector -->
         <dependency>
             <groupId>com.mysql</groupId>

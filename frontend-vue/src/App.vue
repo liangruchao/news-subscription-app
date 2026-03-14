@@ -19,12 +19,15 @@ const unreadCount = ref(0)
 
 // 获取未读消息数量
 const fetchUnreadCount = async () => {
+  // 确保用户已登录才调用 API
   if (!authStore.isLoggedIn) return
+
   try {
     const result = await messageApi.getUnreadCountApi()
     unreadCount.value = result.count
   } catch (error) {
-    console.error('获取未读消息数量失败:', error)
+    // 静默处理错误，可能是 session 过期
+    // console.error('获取未读消息数量失败:', error)
   }
 }
 
@@ -59,6 +62,18 @@ onMounted(() => {
         <nav class="nav-menu">
           <router-link to="/" class="nav-link">
             {{ t('nav.home') }}
+          </router-link>
+          <router-link to="/articles" class="nav-link">
+            {{ t('nav.articles') }}
+          </router-link>
+          <router-link to="/rss-feeds" class="nav-link">
+            {{ t('nav.rssFeeds') }}
+          </router-link>
+          <router-link to="/favorites" class="nav-link">
+            {{ t('nav.favorites') }}
+          </router-link>
+          <router-link to="/search" class="nav-link">
+            {{ t('nav.search') }}
           </router-link>
           <router-link to="/profile" class="nav-link">
             {{ t('nav.profile') }}

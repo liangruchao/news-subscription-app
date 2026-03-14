@@ -3,6 +3,7 @@ package com.newsapp;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * News Subscription Application
@@ -10,6 +11,7 @@ import org.springframework.cache.annotation.EnableCaching;
  */
 @SpringBootApplication
 @EnableCaching
+@EnableScheduling
 public class NewsApplication {
 
     public static void main(String[] args) {

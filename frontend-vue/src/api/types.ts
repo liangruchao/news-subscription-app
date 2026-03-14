@@ -115,3 +115,115 @@ export interface LoginHistory {
   loginTime: string
   loginSuccess: boolean
 }
+
+// ==================== RSS 相关类型 ====================
+
+// RSS源类型
+export interface RssFeed {
+  id: number
+  title: string
+  url: string
+  description?: string
+  category?: string
+  language?: string
+  iconUrl?: string
+  isActive: boolean
+  lastFetchedAt?: string
+  lastFetchedStatus?: string
+  lastFetchedError?: string
+  fetchInterval: number
+  articleCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+// 文章类型
+export interface Article {
+  id: number
+  feedId: number
+  feedTitle?: string
+  guid: string
+  title: string
+  link: string
+  author?: string
+  description?: string
+  content?: string
+  pubDate?: string
+  category?: string
+  imageUrl?: string
+  viewCount: number
+  createdAt: string
+  updatedAt: string
+}
+
+// 文章详情类型
+export interface ArticleDetail extends Article {
+  feedUrl?: string
+  isFavorite?: boolean
+  isRead?: boolean
+  favoriteNotes?: string
+  favoriteTags?: string
+}
+
+// 用户RSS订阅类型
+export interface UserRssSubscription {
+  id: number
+  userId: number
+  feedId: number
+  customTitle?: string
+  isFavorite: boolean
+  priority: number
+  createdAt: string
+}
+
+// 用户收藏类型
+export interface UserFavorite {
+  id: number
+  userId: number
+  articleId: number
+  articleTitle: string
+  articleDescription?: string
+  articleLink: string
+  articleImageUrl?: string
+  articlePubDate?: string
+  notes?: string
+  tags?: string
+  isRead: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+// 用户收藏统计类型
+export interface UserFavoriteStats {
+  totalCount: number
+  unreadCount: number
+  readCount: number
+}
+
+// 文章分享类型
+export interface ArticleShare {
+  id: number
+  shareCode: string
+  shareUrl: string
+  articleId: number
+  articleTitle: string
+  articleContent?: string
+  articleLink: string
+  articleImageUrl?: string
+  articleAuthor?: string
+  articlePubDate?: string
+  title?: string
+  description?: string
+  viewCount: number
+  expiresAt?: string
+  createdAt: string
+}
+
+// 分享文章请求类型
+export interface ShareArticleRequest {
+  articleId: number
+  title?: string
+  description?: string
+  expireDays?: number
+}
+

@@ -23,20 +23,14 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Column(name = "avatar_url")
-    private String avatarUrl;
-
-    @Column(length = 200)
-    private String bio;
-
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
     @Column(name = "avatar_url", length = 500)
     private String avatarUrl;
 
     @Column(name = "bio", length = 500)
     private String bio;
+
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
@@ -97,21 +91,5 @@ public class User {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
-    }
-
-    public String getAvatarUrl() {
-        return avatarUrl;
-    }
-
-    public void setAvatarUrl(String avatarUrl) {
-        this.avatarUrl = avatarUrl;
-    }
-
-    public String getBio() {
-        return bio;
-    }
-
-    public void setBio(String bio) {
-        this.bio = bio;
     }
 }

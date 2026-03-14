@@ -24,8 +24,14 @@ app.use(router)
 app.use(i18n)
 app.use(ElementPlus, { locale: zhCn })
 
+app.mount('#app')
+
 // 初始化认证状态
 const authStore = useAuthStore()
 authStore.initAuth()
 
-app.mount('#app')
+// 验证 session 是否有效（在应用挂载后）
+authStore.fetchCurrentUser().catch(() => {
+  // session 无效，fetchCurrentUser 会自动调用 logout 清除状态
+  console.log('Session 已过期或未登录')
+})

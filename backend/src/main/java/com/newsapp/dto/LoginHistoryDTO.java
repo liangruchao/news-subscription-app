@@ -11,6 +11,7 @@ public class LoginHistoryDTO {
     private String ipAddress;
     private String userAgent;
     private LocalDateTime loginTime;
+    private LocalDateTime logoutTime;
     private Boolean loginSuccess;
 
     public LoginHistoryDTO() {}
@@ -62,6 +63,14 @@ public class LoginHistoryDTO {
 
     public void setLoginTime(LocalDateTime loginTime) {
         this.loginTime = loginTime;
+    }
+
+    public LocalDateTime getLogoutTime() {
+        return logoutTime;
+    }
+
+    public void setLogoutTime(LocalDateTime logoutTime) {
+        this.logoutTime = logoutTime;
     }
 
     public Boolean getLoginSuccess() {

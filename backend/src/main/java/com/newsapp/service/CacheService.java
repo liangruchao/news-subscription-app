@@ -20,7 +20,8 @@ public class CacheService {
 
     private static final Logger logger = LoggerFactory.getLogger(CacheService.class);
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    @Autowired(required = false)
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Value("${cache.ttl:600000}")
     private long cacheTtl;
@@ -32,11 +33,6 @@ public class CacheService {
     private long cacheHits = 0;
     private long cacheMisses = 0;
     private long apiCalls = 0;
-
-    @Autowired
-    public CacheService(RedisTemplate<String, Object> redisTemplate) {
-        this.redisTemplate = redisTemplate;
-    }
 
     /**
      * 生成缓存 Key
@@ -51,7 +47,7 @@ public class CacheService {
      */
     @SuppressWarnings("unchecked")
     public List<NewsDto> getFromCache(String category) {
-        if (!cacheEnabled) {
+        if (!cacheEnabled || redisTemplate == null) {
             logger.debug("缓存未启用");
             return null;
         }
@@ -80,7 +76,7 @@ public class CacheService {
      * 将新闻列表保存到缓存
      */
     public void saveToCache(String category, List<NewsDto> newsList) {
-        if (!cacheEnabled) {
+        if (!cacheEnabled || redisTemplate == null) {
             logger.debug("缓存未启用");
             return;
         }
@@ -99,6 +95,9 @@ public class CacheService {
      * 刷新指定类别的缓存
      */
     public void refreshCache(String category) {
+        if (redisTemplate == null) {
+            return;
+        }
         String key = generateKey(category);
         try {
             redisTemplate.delete(key);
@@ -112,7 +111,7 @@ public class CacheService {
      * 检查缓存是否存在
      */
     public boolean existsInCache(String category) {
-        if (!cacheEnabled) {
+        if (!cacheEnabled || redisTemplate == null) {
             return false;
         }
 
@@ -130,6 +129,9 @@ public class CacheService {
      * 获取缓存剩余时间（秒）
      */
     public long getCacheTtl(String category) {
+        if (redisTemplate == null) {
+            return -1;
+        }
         String key = generateKey(category);
         try {
             Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
@@ -144,6 +146,9 @@ public class CacheService {
      * 清空所有新闻缓存
      */
     public void clearAllCache() {
+        if (redisTemplate == null) {
+            return;
+        }
         try {
             // 删除所有 news: 前缀的键
             redisTemplate.delete(redisTemplate.keys("news:*"));
@@ -157,6 +162,9 @@ public class CacheService {
      * 检查 Redis 连接状态
      */
     public boolean isRedisAvailable() {
+        if (redisTemplate == null) {
+            return false;
+        }
         try {
             redisTemplate.getConnectionFactory().getConnection().ping();
             return true;

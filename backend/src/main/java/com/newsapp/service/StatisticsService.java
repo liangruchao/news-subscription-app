@@ -1,5 +1,6 @@
 package com.newsapp.service;
 
+import com.newsapp.dto.UserStatsDTO;
 import com.newsapp.dto.UserStatisticsResponse;
 import com.newsapp.entity.LoginHistory;
 import com.newsapp.entity.User;
@@ -61,6 +62,22 @@ public class StatisticsService {
         } else {
             stats.setLoginCount(0L);
         }
+
+        return stats;
+    }
+
+    /**
+     * 获取用户统计信息（通过用户ID）
+     */
+    public UserStatsDTO getUserStats(Long userId) {
+        log.info("获取用户统计信息: userId={}", userId);
+
+        // TODO: 实现获取用户对象
+        // 暂时返回空的统计信息
+        UserStatsDTO stats = new UserStatsDTO();
+        stats.setTotalSubscriptions(0);
+        stats.setTotalMessages(0);
+        stats.setUnreadMessages(0);
 
         return stats;
     }

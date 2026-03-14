@@ -1,5 +1,6 @@
 package com.newsapp.service;
 
+import com.newsapp.dto.LoginHistoryDTO;
 import com.newsapp.dto.LoginHistoryResponse;
 import com.newsapp.entity.LoginHistory;
 import com.newsapp.repository.LoginHistoryRepository;
@@ -101,5 +102,30 @@ public class LoginHistoryService {
         response.setLoginTime(history.getLoginTime());
         response.setLogoutTime(history.getLogoutTime());
         return response;
+    }
+
+    /**
+     * 获取用户登录历史（返回LoginHistoryDTO）
+     */
+    public List<LoginHistoryDTO> getUserLoginHistory(Long userId) {
+        List<LoginHistory> histories = loginHistoryRepository
+                .findByUserIdOrderByLoginTimeDesc(userId);
+
+        return histories.stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 转换为DTO对象
+     */
+    private LoginHistoryDTO toDto(LoginHistory history) {
+        LoginHistoryDTO dto = new LoginHistoryDTO();
+        dto.setId(history.getId());
+        dto.setIpAddress(history.getIpAddress());
+        dto.setUserAgent(history.getUserAgent());
+        dto.setLoginTime(history.getLoginTime());
+        dto.setLogoutTime(history.getLogoutTime());
+        return dto;
     }
 }

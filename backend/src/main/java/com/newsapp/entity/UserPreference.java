@@ -26,6 +26,15 @@ public class UserPreference {
     @Column(name = "subscription_update", nullable = false)
     private Boolean subscriptionUpdate = true;
 
+    @Column(name = "news_notification", nullable = false)
+    private Boolean newsNotification = true;
+
+    @Column(name = "system_notification", nullable = false)
+    private Boolean systemNotification = true;
+
+    @Column(name = "subscription_notification", nullable = false)
+    private Boolean subscriptionNotification = true;
+
     // 界面偏好
     @Column(name = "theme", length = 20)
     private String theme = "light";
@@ -35,6 +44,19 @@ public class UserPreference {
 
     @Column(name = "page_size")
     private Integer pageSize = 10;
+
+    @Column(name = "news_page_size")
+    private Integer newsPageSize = 10;
+
+    @Column(name = "compact_mode", nullable = false)
+    private Boolean compactMode = false;
+
+    // 隐私偏好
+    @Column(name = "public_profile", nullable = false)
+    private Boolean publicProfile = false;
+
+    @Column(name = "show_online_status", nullable = false)
+    private Boolean showOnlineStatus = true;
 
     @Column(name = "created_at", updatable = false)
     private java.time.LocalDateTime createdAt;
@@ -131,5 +153,61 @@ public class UserPreference {
 
     public void setUpdatedAt(java.time.LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Boolean getNewsNotification() {
+        return newsNotification;
+    }
+
+    public void setNewsNotification(Boolean newsNotification) {
+        this.newsNotification = newsNotification;
+    }
+
+    public Boolean getSystemNotification() {
+        return systemNotification;
+    }
+
+    public void setSystemNotification(Boolean systemNotification) {
+        this.systemNotification = systemNotification;
+    }
+
+    public Boolean getSubscriptionNotification() {
+        return subscriptionNotification;
+    }
+
+    public void setSubscriptionNotification(Boolean subscriptionNotification) {
+        this.subscriptionNotification = subscriptionNotification;
+    }
+
+    public Integer getNewsPageSize() {
+        return newsPageSize;
+    }
+
+    public void setNewsPageSize(Integer newsPageSize) {
+        this.newsPageSize = newsPageSize;
+    }
+
+    public Boolean getCompactMode() {
+        return compactMode;
+    }
+
+    public void setCompactMode(Boolean compactMode) {
+        this.compactMode = compactMode;
+    }
+
+    public Boolean getPublicProfile() {
+        return publicProfile;
+    }
+
+    public void setPublicProfile(Boolean publicProfile) {
+        this.publicProfile = publicProfile;
+    }
+
+    public Boolean getShowOnlineStatus() {
+        return showOnlineStatus;
+    }
+
+    public void setShowOnlineStatus(Boolean showOnlineStatus) {
+        this.showOnlineStatus = showOnlineStatus;
     }
 }

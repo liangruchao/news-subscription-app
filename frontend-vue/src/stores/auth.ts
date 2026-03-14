@@ -40,14 +40,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   const login = async (credentials: LoginRequest) => {
     try {
-      const response = await authApi.loginApi(credentials)
-      setUser(response.user)
-
-      // 如果后端返回了 token，保存它
-      if (response.token) {
-        setToken(response.token)
-      }
-
+      const user = await authApi.loginApi(credentials)
+      setUser(user)
       return { success: true }
     } catch (error: any) {
       return { success: false, message: error.message }
@@ -56,13 +50,8 @@ export const useAuthStore = defineStore('auth', () => {
 
   const register = async (userInfo: RegisterRequest) => {
     try {
-      const response = await authApi.registerApi(userInfo)
-      setUser(response.user)
-
-      if (response.token) {
-        setToken(response.token)
-      }
-
+      const user = await authApi.registerApi(userInfo)
+      setUser(user)
       return { success: true }
     } catch (error: any) {
       return { success: false, message: error.message }
@@ -79,6 +68,10 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = ''
       localStorage.removeItem('user')
       localStorage.removeItem('token')
+      // 跳转到登录页（如果当前不在登录页）
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login'
+      }
     }
   }
 

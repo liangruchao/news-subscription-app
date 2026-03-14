@@ -50,9 +50,11 @@ request.interceptors.response.use(
 
       switch (status) {
         case 401:
-          ElMessage.error(data.message || '未登录，请先登录')
-          // 跳转到登录页
-          window.location.href = '/login'
+          // 不显示错误消息，因为用户可能只是未登录
+          // 仅在非登录页时才跳转
+          if (!window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
+            window.location.href = '/login'
+          }
           break
         case 403:
           ElMessage.error(data.message || '没有权限访问')

@@ -45,6 +45,42 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '系统公告' },
   },
   {
+    path: '/rss-feeds',
+    name: 'RssFeeds',
+    component: () => import('@/views/RssFeeds.vue'),
+    meta: { requiresAuth: true, title: 'RSS源管理' },
+  },
+  {
+    path: '/articles',
+    name: 'Articles',
+    component: () => import('@/views/Articles.vue'),
+    meta: { requiresAuth: true, title: '文章列表' },
+  },
+  {
+    path: '/articles/:id',
+    name: 'ArticleDetail',
+    component: () => import('@/views/ArticleDetail.vue'),
+    meta: { requiresAuth: true, title: '文章详情' },
+  },
+  {
+    path: '/favorites',
+    name: 'Favorites',
+    component: () => import('@/views/Favorites.vue'),
+    meta: { requiresAuth: true, title: '我的收藏' },
+  },
+  {
+    path: '/search',
+    name: 'Search',
+    component: () => import('@/views/Search.vue'),
+    meta: { requiresAuth: true, title: '搜索' },
+  },
+  {
+    path: '/share/:code',
+    name: 'SharedArticle',
+    component: () => import('@/views/SharedArticle.vue'),
+    meta: { title: '分享文章' },
+  },
+  {
     path: '/404',
     name: 'NotFound',
     component: () => import('@/views/NotFound.vue'),

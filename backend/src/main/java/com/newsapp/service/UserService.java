@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 用户服务
@@ -193,5 +194,71 @@ public class UserService {
         }
         userRepository.deleteById(userId);
         log.info("用户删除成功: userId={}", userId);
+    }
+
+    /**
+     * 根据用户名查找用户（返回User对象）
+     */
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username).orElse(null);
+    }
+
+    /**
+     * 更新用户信息
+     */
+    @Transactional
+    public User updateUser(User user) {
+        return userRepository.save(user);
+    }
+
+    /**
+     * 修改密码（通过用户名）
+     */
+    @Transactional
+    public void changePassword(String username, String oldPassword, String newPassword) {
+        log.info("修改密码: username={}", username);
+
+        User user = getUserByUsername(username);
+
+        // 验证旧密码
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new BusinessException("旧密码错误");
+        }
+
+        // 设置新密码
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        log.info("密码修改成功: username={}", username);
+    }
+
+    /**
+     * 上传头像
+     */
+    @Transactional
+    public String uploadAvatar(String username, MultipartFile file) {
+        log.info("上传头像: username={}, filename={}", username, file.getOriginalFilename());
+
+        User user = getUserByUsername(username);
+
+        // TODO: 实现文件上传逻辑，保存到本地或云存储
+        // 暂时返回一个占位URL
+        String avatarUrl = "/uploads/avatars/" + user.getId() + "_" + System.currentTimeMillis() + ".jpg";
+        user.setAvatarUrl(avatarUrl);
+        userRepository.save(user);
+
+        log.info("头像上传成功: username={}, avatarUrl={}", username, avatarUrl);
+        return avatarUrl;
+    }
+
+    /**
+     * 删除用户（通过用户名）
+     */
+    @Transactional
+    public void deleteUser(String username) {
+        log.info("删除用户: username={}", username);
+        User user = getUserByUsername(username);
+        userRepository.delete(user);
+        log.info("用户删除成功: username={}", username);
     }
 }

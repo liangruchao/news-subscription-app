@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive, ref, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
@@ -45,9 +45,11 @@ const handleLogin = async () => {
 
   if (result.success) {
     uiStore.showSuccess(t('auth.loginSuccess'))
+    // 等待响应式状态更新后再跳转
+    await nextTick()
     // 跳转到原来的页面或首页
     const redirect = (route.query.redirect as string) || '/'
-    router.push(redirect)
+    await router.push(redirect)
   } else {
     uiStore.showError(result.message || t('auth.loginFailed'))
   }

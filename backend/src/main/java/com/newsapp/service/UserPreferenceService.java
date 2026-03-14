@@ -1,13 +1,17 @@
 package com.newsapp.service;
 
 import com.newsapp.dto.UpdatePreferenceRequest;
+import com.newsapp.entity.User;
 import com.newsapp.entity.UserPreference;
 import com.newsapp.exception.BusinessException;
 import com.newsapp.repository.UserPreferenceRepository;
+import com.newsapp.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Map;
 
 /**
  * 用户偏好服务
@@ -18,9 +22,12 @@ public class UserPreferenceService {
     private static final Logger log = LoggerFactory.getLogger(UserPreferenceService.class);
 
     private final UserPreferenceRepository preferenceRepository;
+    private final UserRepository userRepository;
 
-    public UserPreferenceService(UserPreferenceRepository preferenceRepository) {
+    public UserPreferenceService(UserPreferenceRepository preferenceRepository,
+                                  UserRepository userRepository) {
         this.preferenceRepository = preferenceRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -93,5 +100,68 @@ public class UserPreferenceService {
             preferenceRepository.delete(preference);
             log.info("删除用户偏好设置: userId={}", userId);
         });
+    }
+
+    /**
+     * 获取或创建用户偏好设置（通过用户名）
+     */
+    public UserPreference getOrCreatePreference(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new BusinessException("用户不存在"));
+        return getUserPreference(user.getId());
+    }
+
+    /**
+     * 更新用户偏好设置（通过用户名和Map）
+     */
+    @Transactional
+    public UserPreference updatePreference(String username, Map<String, Object> updates) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new BusinessException("用户不存在"));
+
+        UserPreference preference = getUserPreference(user.getId());
+
+        // 更新各种偏好设置
+        if (updates.containsKey("newsNotification")) {
+            preference.setNewsNotification((Boolean) updates.get("newsNotification"));
+        }
+        if (updates.containsKey("systemNotification")) {
+            preference.setSystemNotification((Boolean) updates.get("systemNotification"));
+        }
+        if (updates.containsKey("subscriptionNotification")) {
+            preference.setSubscriptionNotification((Boolean) updates.get("subscriptionNotification"));
+        }
+        if (updates.containsKey("newsPageSize")) {
+            preference.setNewsPageSize((Integer) updates.get("newsPageSize"));
+        }
+        if (updates.containsKey("compactMode")) {
+            preference.setCompactMode((Boolean) updates.get("compactMode"));
+        }
+        if (updates.containsKey("language")) {
+            preference.setLanguage((String) updates.get("language"));
+        }
+        if (updates.containsKey("publicProfile")) {
+            preference.setPublicProfile((Boolean) updates.get("publicProfile"));
+        }
+        if (updates.containsKey("showOnlineStatus")) {
+            preference.setShowOnlineStatus((Boolean) updates.get("showOnlineStatus"));
+        }
+
+        return preferenceRepository.save(preference);
+    }
+
+    /**
+     * 重置用户偏好设置为默认值（通过用户名）
+     */
+    @Transactional
+    public UserPreference resetToDefault(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new BusinessException("用户不存在"));
+
+        // 删除现有偏好设置
+        deleteUserPreference(user.getId());
+
+        // 创建新的默认偏好设置
+        return createDefaultPreference(user.getId());
     }
 }

@@ -27,6 +27,9 @@ export const useNewsStore = defineStore('news', () => {
     loading.value = true
     try {
       news.value = await newsApi.getUserNewsApi()
+    } catch (error) {
+      // 静默处理错误，可能是用户未登录或没有订阅
+      news.value = []
     } finally {
       loading.value = false
     }
@@ -37,6 +40,8 @@ export const useNewsStore = defineStore('news', () => {
     try {
       const data = await newsApi.getNewsByCategoryApi(category)
       return data
+    } catch (error) {
+      return []
     } finally {
       loading.value = false
     }
@@ -51,13 +56,21 @@ export const useNewsStore = defineStore('news', () => {
   }
 
   const addSubscription = async (category: string) => {
-    await newsApi.addSubscriptionApi(category)
-    await fetchSubscriptions()
+    try {
+      await newsApi.addSubscriptionApi(category)
+      await fetchSubscriptions()
+    } catch (error) {
+      // 静默处理错误
+    }
   }
 
   const removeSubscription = async (category: string) => {
-    await newsApi.removeSubscriptionApi(category)
-    await fetchSubscriptions()
+    try {
+      await newsApi.removeSubscriptionApi(category)
+      await fetchSubscriptions()
+    } catch (error) {
+      // 静默处理错误
+    }
   }
 
   const hasSubscription = (category: string) => {

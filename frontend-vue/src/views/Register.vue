@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive, ref, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
@@ -71,7 +71,9 @@ const handleRegister = async () => {
 
   if (result.success) {
     uiStore.showSuccess(t('auth.registerSuccess'))
-    router.push('/')
+    // 等待响应式状态更新后再跳转
+    await nextTick()
+    await router.push('/')
   } else {
     uiStore.showError(result.message || t('auth.registerFailed'))
   }

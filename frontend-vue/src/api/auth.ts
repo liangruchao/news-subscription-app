@@ -1,18 +1,18 @@
 import request from './request'
-import type { LoginRequest, RegisterRequest, LoginResponse, User } from './types'
+import type { LoginRequest, RegisterRequest, User } from './types'
 
 /**
  * 用户登录
  */
 export const loginApi = (data: LoginRequest) => {
-  return request.post<any, LoginResponse>('/auth/login', data)
+  return request.post<any, User>('/auth/login', data)
 }
 
 /**
  * 用户注册
  */
 export const registerApi = (data: RegisterRequest) => {
-  return request.post<any, LoginResponse>('/auth/register', data)
+  return request.post<any, User>('/auth/register', data)
 }
 
 /**
